@@ -97,4 +97,4 @@ function buildErrorObject (error, message) {
   return { error, message }
 }
 
-export { formatCsvDataToJson, errorTypes, errorMassages, buildErrorObject }
+export { formatCsvDataToJson, checkIsValidNumber, errorTypes, errorMassages, buildErrorObject }

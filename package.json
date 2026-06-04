@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node index.js",
     "build": "echo 'No build step required for pure Node.js'",
-    "test": "mocha --exit ./test/*.test.js",
+    "test": "mocha --exit ./test/**/*.test.js",
     "lint": "standard --fix",
     "install:personal": "npm_config_userconfig=./.npmrc npm install"
   },
