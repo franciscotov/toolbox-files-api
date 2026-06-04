@@ -11,7 +11,7 @@
   "scripts": {
     "start": "node index.js",
     "build": "echo 'No build step required for pure Node.js'",
-    "test": "standard --fix",
+    "test": "mocha --exit --watch --parallel ./test/*.test.js",
     "standard": "standard --fix",
     "install:personal": "npm_config_userconfig=./.npmrc npm install"
   },
