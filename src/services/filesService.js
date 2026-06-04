@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { formatCsvDataToJson } from '../common/utils.js'
+import { formatCsvDataToJson, errorTypes, errorMassages, buildErrorObject } from '../common/utils.js'
 
 const API_URL = 'https://echo-serv.tbxnet.com/v1'
 
@@ -17,23 +17,33 @@ async function getFiles (req, res) {
     // send the formated data
     const dat = await axios.get(`${API_URL}/secret/files`, options)
     const files = dat.data.files
-    const promises = []
 
-    if (files && files.length > 0) {
-      for (const file of files) {
-        const p = axios.get(`${API_URL}/secret/file/${file}`, options)
-        promises.push(p)
-      }
-      const results = await Promise.allSettled(promises)
-      const formattedData = formatCsvDataToJson(results)
-      return res.status(200).send(formattedData)
-    }
-
-    return res.status(200).send([])
+    return await searchFilesInfo(req, res, files)
   } catch (error) {
-    console.log('Alive...............', { error })
-    // throw new Error(error);
+    return res.status(500).send(buildErrorObject(errorTypes.internalServerError, errorMassages.internalServerError))
   }
+}
+
+async function searchFilesInfo (req, res, files) {
+  const promises = []
+  const { fileName } = req.query
+  if (fileName) {
+    console.log(fileName, files)
+    if (!files.includes(fileName)) {
+      return res.status(404).send(buildErrorObject(errorTypes.fileNotFound, errorMassages.fileNotFound))
+    }
+  }
+
+  if (files && files.length > 0) {
+    for (const file of files) {
+      const p = axios.get(`${API_URL}/secret/file/${file}`, options)
+      promises.push(p)
+    }
+    const results = await Promise.allSettled(promises)
+    const formattedData = formatCsvDataToJson(results)
+    return res.status(200).send(formattedData)
+  }
+  res.status(200).send([])
 }
 
 async function getFilesList (req, res) {
@@ -44,7 +54,7 @@ async function getFilesList (req, res) {
     const data = dat.data
     return res.status(200).send(data)
   } catch (error) {
-    throw new Error(error)
+    return res.status(500).send(buildErrorObject(errorTypes.internalServerError, errorMassages.internalServerError))
   }
 }
 

@@ -1,6 +1,24 @@
+
+/**
+ * @typedef {Object} Line
+ * @property {string} text
+ * @property {string} number
+ * @property {string} hex
+ */
+
+/**
+ * @typedef {Object} FormattedFile
+ * @property {string} file
+ * @property {Array<Line> | Array<{}>} lines
+ */
+
+/**
+ * @typedef {Array<FormattedFile>} Response
+ */
+
 /**
 @param {Array<{status: string, value: {data: string}}>} data
-@returns @type {Array<{file: string, lines: Array<{text: string, number: string, hex: string>}}>}
+@returns {Response}
 */
 
 function formatCsvDataToJson (data) {
@@ -19,15 +37,23 @@ function formatCsvDataToJson (data) {
             file = values[0]
           }
           values.shift()
-          return headers.reduce((obj, header, index) => {
-            if (header === 'number') {
-              // thinking number prop has to be a valid number(without other character)
-              obj[header] = checkIsValidNumber(values[index])
-            } else {
-              obj[header] = values[index] ?? ''
-            }
-            return obj
-          }, {})
+          return headers.reduce(
+            /**
+             * @param {Record<string, string>} obj
+             * @param {string} header
+             * @param {number} index
+             */
+            (obj, header, index) => {
+              if (header === 'number') {
+                // thinking number prop has to be a valid number(without other character)
+                obj[header] = checkIsValidNumber(values[index])
+              } else {
+                obj[header] = values[index] ?? ''
+              }
+              return obj
+            },
+            /** @type {Record<string, string>} */ ({})
+          )
         })
         .filter((row) => headers.every((header) => row[header]))
       if (lines.length > 0) {
@@ -40,12 +66,35 @@ function formatCsvDataToJson (data) {
 
 /**
 @param {string} str
-@returns @type {string}>}
+@returns {string}>}
 */
-
 function checkIsValidNumber (str) {
   const num = Number(str)
   return Number.isNaN(num) ? '' : str
 }
 
-export { formatCsvDataToJson }
+const errorTypes = {
+  fileNotFound: 'file_not_found',
+  internalServerError: 'internal_server_error'
+}
+const errorMassages = {
+  fileNotFound: 'Please enter a valid file',
+  internalServerError: 'Inernal Server Error'
+}
+
+/**
+ * @typedef {Object} Error
+ * @property {string} error
+ * @property {string} message
+ */
+
+/**
+@param {string} error
+@param {string} message
+@returns {Error}
+*/
+function buildErrorObject (error, message) {
+  return { error, message }
+}
+
+export { formatCsvDataToJson, errorTypes, errorMassages, buildErrorObject }
