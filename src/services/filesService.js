@@ -41,14 +41,18 @@ async function searchFilesInfo(req, res, files) {
   const promises = [];
   const { fileName } = req.query;
   if (fileName) {
-    if (!files.includes(fileName)) {
+    const normalizedFileName = fileName.endsWith('.csv')
+      ? fileName
+      : `${fileName}.csv`;
+
+    if (!files.includes(normalizedFileName)) {
       return res
         .status(404)
         .send(
           buildErrorObject(errorTypes.fileNotFound, errorMassages.fileNotFound),
         );
     }
-    files = files.filter((file) => file === fileName);
+    files = files.filter((file) => file === normalizedFileName);
   }
 
   if (files && files.length > 0) {

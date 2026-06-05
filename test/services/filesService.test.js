@@ -230,5 +230,83 @@ describe("filesService", () => {
       expect(res.statusCode).to.equal(200);
       expect(res.body).to.deep.equal([]);
     });
+
+    it("returns only one file when a matching fileName query is provided", async () => {
+      const req = { query: { fileName: "file1.csv" } };
+      axios.get = async (url) => {
+        if (url.endsWith("/secret/files")) {
+          return {
+            data: {
+              files: ["file1.csv", "file2.csv"],
+            },
+          };
+        }
+
+        if (url.endsWith("/secret/file/file1.csv")) {
+          return {
+            data: "file1,number,text,hex\nfile1,123,hello,abcd",
+          };
+        }
+
+        throw new Error(`Unexpected URL: ${url}`);
+      };
+
+      const res = createMockRes();
+      await getFiles(req, res);
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.body).to.deep.equal([fullLinesFormattedFiles[0]]);
+    });
+
+    it("returns only one file when a matching fileName query is provided without extension", async () => {
+      const req = { query: { fileName: "file1" } };
+      axios.get = async (url) => {
+        if (url.endsWith("/secret/files")) {
+          return {
+            data: {
+              files: ["file1.csv", "file2.csv"],
+            },
+          };
+        }
+
+        if (url.endsWith("/secret/file/file1.csv")) {
+          return {
+            data: "file1,number,text,hex\nfile1,123,hello,abcd",
+          };
+        }
+
+        throw new Error(`Unexpected URL: ${url}`);
+      };
+
+      const res = createMockRes();
+      await getFiles(req, res);
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.body).to.deep.equal([fullLinesFormattedFiles[0]]);
+    });
+
+    it("returns 404 when the requested fileName is not available", async () => {
+      const req = { query: { fileName: "missing.csv" } };
+      axios.get = async (url) => {
+        if (url.endsWith("/secret/files")) {
+          return {
+            data: {
+              files: ["file1.csv", "file2.csv"],
+            },
+          };
+        }
+
+        throw new Error(`Unexpected URL: ${url}`);
+      };
+
+      const res = createMockRes();
+      await getFiles(req, res);
+
+      expect(res.statusCode).to.equal(404);
+      expect(res.body).to.deep.equal({
+        error: 'file_not_found',
+        message: 'Please enter a valid file',
+      });
+    });
   });
 });
